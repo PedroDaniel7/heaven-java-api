@@ -1,7 +1,6 @@
 package br.com.heaven.model;
 import br.com.heaven.persistence.Coluna;
 import br.com.heaven.persistence.Tabela;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 /** Entidade correspondente a HISTORICO_PONTOS; invariantes dos casos de uso ficam no serviço. */
 @Tabela("HISTORICO_PONTOS")
