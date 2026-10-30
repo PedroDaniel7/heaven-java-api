@@ -78,4 +78,18 @@ class TokenServiceTest {
         assertThrows(IllegalStateException.class, () -> new TokenService(""));
         assertThrows(IllegalStateException.class, () -> new TokenService(null));
     }
+
+    @Test
+    void trocarOUltimoCaractereDaAssinaturaNuncaValida() {
+        TokenService s = com(SEGREDO, AGORA);
+        for (long id = 1; id <= 60; id++) {
+            String token = s.emitir(id).token();
+            char ultimo = token.charAt(token.length() - 1);
+            for (char c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".toCharArray()) {
+                if (c == ultimo) continue;
+                String ruim = token.substring(0, token.length() - 1) + c;
+                assertThrows(RegraNegocioException.class, () -> s.validar(ruim));
+            }
+        }
+    }
 }

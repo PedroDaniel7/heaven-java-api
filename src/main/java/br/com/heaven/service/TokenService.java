@@ -66,7 +66,10 @@ public class TokenService {
             int ponto = token.indexOf('.');
             if (ponto <= 0 || ponto != token.lastIndexOf('.')) throw negado();
             String carga = token.substring(0, ponto);
-            byte[] recebida = DECODIFICADOR.decode(token.substring(ponto + 1));
+            String assinaturaTexto = token.substring(ponto + 1);
+            byte[] recebida = DECODIFICADOR.decode(assinaturaTexto);
+            // O último caractere do base64 tem bits sobrando: sem esta checagem, trocá-lo poderia decodificar para os mesmos bytes.
+            if (!CODIFICADOR.encodeToString(recebida).equals(assinaturaTexto)) throw negado();
             if (!MessageDigest.isEqual(recebida, assinar(carga))) throw negado();
             String[] partes = new String(DECODIFICADOR.decode(carga), StandardCharsets.UTF_8).split(":");
             if (partes.length != 2) throw negado();
