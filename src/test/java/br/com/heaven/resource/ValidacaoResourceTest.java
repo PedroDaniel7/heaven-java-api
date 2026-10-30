@@ -9,6 +9,7 @@ import br.com.heaven.bo.ValidacaoBO;
 import br.com.heaven.config.AuthInterceptor;
 import br.com.heaven.model.AcaoUsuario;
 import br.com.heaven.model.TipoAcao;
+import br.com.heaven.service.ChaveAdmin;
 import br.com.heaven.service.CodigoErro;
 import br.com.heaven.service.RegraNegocioException;
 import br.com.heaven.service.TokenService;
@@ -52,7 +53,7 @@ class ValidacaoResourceTest {
     void preparar() {
         mvc = MockMvcBuilders.standaloneSetup(new ValidacaoResource(validacoes, acoes), new RankingResource(usuarios))
                 .setControllerAdvice(new ApiExceptionHandler())
-                .addMappedInterceptors(new String[]{"/api/**"}, new AuthInterceptor(tokens))
+                .addMappedInterceptors(new String[]{"/api/**"}, new AuthInterceptor(tokens, new ChaveAdmin("")))
                 .build();
         auth = "Bearer " + tokens.emitir(5).token();
     }

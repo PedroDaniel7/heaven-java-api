@@ -2,6 +2,7 @@ package br.com.heaven.config;
 
 import br.com.heaven.resource.ApiExceptionHandler;
 import br.com.heaven.resource.SaudeResource;
+import br.com.heaven.service.ChaveAdmin;
 import br.com.heaven.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,7 @@ class AuthInterceptorTest {
     void preparar() {
         mvc = MockMvcBuilders.standaloneSetup(new Fake(), new SaudeResource(jdbc))
                 .setControllerAdvice(new ApiExceptionHandler())
-                .addMappedInterceptors(new String[]{"/api/**"}, new AuthInterceptor(tokens))
+                .addMappedInterceptors(new String[]{"/api/**"}, new AuthInterceptor(tokens, new ChaveAdmin("")))
                 .build();
     }
 
