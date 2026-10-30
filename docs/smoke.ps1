@@ -296,7 +296,7 @@ finally {
                 $d = Invoke-Api DELETE '/usuarios/me' -Token $l.Json.token
                 Check "desativa conta $($par.N)" $d 204
                 $m = Invoke-Api GET '/usuarios/me' -Token $l.Json.token
-                Check "conta $($par.N) inativa nao acessa /me (403)" $m 403 { param($x) Erro-Contrato $x 'PROIBIDO' }
+                Check "conta $($par.N) inativa nao acessa /me (401)" $m 401 { param($x) Erro-Contrato $x 'NAO_AUTENTICADO' }
                 $l2 = Invoke-Api POST '/auth/login' @{ email = $par.E; senha = $senhaOk }
                 Check "login com senha certa em conta inativa $($par.N) (403)" $l2 403 { param($x) Erro-Contrato $x 'PROIBIDO' }
             } else {
