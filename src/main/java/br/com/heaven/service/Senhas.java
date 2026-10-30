@@ -7,7 +7,7 @@ public final class Senhas {
     private static final int ITERACOES=210000;
     private Senhas() {}
     public static String criar(char[] senha) {
-        if(senha==null || senha.length<8) throw new RegraNegocioException("Senha deve ter ao menos 8 caracteres.");
+        if(senha==null || senha.length<8) throw new RegraNegocioException(CodigoErro.VALIDACAO,"Senha deve ter ao menos 8 caracteres.");
         byte[] salt=new byte[16]; new SecureRandom().nextBytes(salt);
         return "pbkdf2$"+ITERACOES+"$"+Base64.getEncoder().encodeToString(salt)+"$"+Base64.getEncoder().encodeToString(derivar(senha,salt,ITERACOES));
     }
