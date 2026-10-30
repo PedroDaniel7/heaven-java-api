@@ -74,6 +74,32 @@ public class UsuarioBO extends BaseBO {
         });
     }
 
+    /** Atualiza nome e e-mail; a senha só muda quando {@code novaSenha} vem preenchida. E-mail repetido vira 409 pela restrição única. */
+    public PerfilUsuario atualizar(long id, String nome, String email, char[] novaSenha) throws SQLException {
+        String n = Regras.texto(nome, "Nome", 120);
+        String e = Regras.texto(email, "E-mail", 150).toLowerCase(Locale.ROOT);
+        if (!e.matches(PADRAO_EMAIL)) throw new RegraNegocioException(CodigoErro.VALIDACAO, "E-mail inválido.");
+        String hash = novaSenha == null ? null : Senhas.criar(novaSenha);
+        return transacao(c -> {
+            Usuario u = ativo(c, id);
+            u.setNome(n);
+            u.setEmail(e);
+            if (hash != null) u.setSenhaHash(hash);
+            new UsuarioDAO(c).atualizar(u);
+            return new PerfilUsuario(u, nivel(c, u, true).getNome());
+        });
+    }
+
+    /** Desativação lógica da conta: STATUS_CONTA passa a INATIVO. */
+    public void desativar(long id) throws SQLException {
+        transacao(c -> {
+            Usuario u = ativo(c, id);
+            u.setStatusConta("INATIVO");
+            new UsuarioDAO(c).atualizar(u);
+            return null;
+        });
+    }
+
     public List<ItemRanking> ranking(int limite) throws SQLException {
         if (limite < 1 || limite > 100)
             throw new RegraNegocioException(CodigoErro.VALIDACAO, "O limite deve estar entre 1 e 100.");

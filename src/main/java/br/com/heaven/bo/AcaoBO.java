@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** Tipos de ação e ações sustentáveis do usuário. */
 @Service
@@ -28,6 +31,28 @@ public class AcaoBO extends BaseBO {
 
     public List<TipoAcao> tiposAtivos() throws SQLException {
         return leitura(c -> new TipoAcaoDAO(c).listar().stream().filter(t -> "S".equals(t.getStatusAtivo())).toList());
+    }
+
+    /** Tipo ativo por id; inexistente ou inativo vira 404 (consulta pública). */
+    public TipoAcao tipoAtivo(long id) throws SQLException {
+        return leitura(c -> new TipoAcaoDAO(c).buscar(id)
+                .filter(t -> "S".equals(t.getStatusAtivo()))
+                .orElseThrow(() -> new RegraNegocioException(CodigoErro.NAO_ENCONTRADO, "Tipo não encontrado.")));
+    }
+
+    /** Todos os tipos por id, inclusive inativos: ações antigas continuam mostrando o nome do tipo. */
+    public Map<Long, TipoAcao> tiposPorId() throws SQLException {
+        return leitura(c -> new TipoAcaoDAO(c).listar().stream().collect(Collectors.toMap(TipoAcao::getId, Function.identity())));
+    }
+
+    /** Só a ação do próprio usuário; a de outro usuário é indistinguível de inexistente (404). */
+    public AcaoUsuario buscarMinha(long usuario, long acao) throws SQLException {
+        return leitura(c -> {
+            ativo(c, usuario);
+            return new AcaoUsuarioDAO(c).buscar(acao)
+                    .filter(a -> a.getIdUsuario() == usuario)
+                    .orElseThrow(() -> new RegraNegocioException(CodigoErro.NAO_ENCONTRADO, "Ação não encontrada."));
+        });
     }
 
     public AcaoUsuario registrarAcao(long usuario, long tipo, BigDecimal quantidade, String evidencia) throws SQLException {
@@ -58,7 +83,7 @@ public class AcaoBO extends BaseBO {
             ativo(c, usuario);
             List<AcaoUsuario> lista = new ArrayList<>();
             AcaoUsuarioDAO dao = new AcaoUsuarioDAO(c);
-            for (long id : Jdbc.ids(c, "SELECT ID FROM ACAO_USUARIO WHERE ID_USUARIO=? ORDER BY DATA_HORA DESC", usuario))
+            for (long id : Jdbc.ids(c, "SELECT ID FROM ACAO_USUARIO WHERE ID_USUARIO=? ORDER BY DATA_HORA DESC, ID DESC", usuario))
                 lista.add(dao.buscar(id).orElseThrow());
             return lista;
         });
