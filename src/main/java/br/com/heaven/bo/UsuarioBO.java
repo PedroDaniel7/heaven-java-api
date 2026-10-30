@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,14 +63,22 @@ public class UsuarioBO extends BaseBO {
             boolean confere = Senhas.conferir(senha, u == null ? HashFalso.VALOR : u.getSenhaHash());
             if (u == null || !confere) throw new RegraNegocioException(CodigoErro.NAO_AUTENTICADO, CREDENCIAL_INVALIDA);
             if (!"ATIVO".equals(u.getStatusConta()))
-                throw new RegraNegocioException(CodigoErro.PROIBIDO, "Conta não está ativa.");
+                throw new RegraNegocioException(CodigoErro.PROIBIDO, "Esta conta foi desativada e não pode entrar.");
             return new PerfilUsuario(u, nivel(c, u, false).getNome());
         });
     }
 
+    /** Token de conta inativa ou inexistente não vale para /usuarios/me: 401 NAO_AUTENTICADO. */
+    private Usuario ativoOuNaoAutenticado(Connection c, long id) throws SQLException {
+        Usuario u = new UsuarioDAO(c).buscar(id).orElse(null);
+        if (u == null || !"ATIVO".equals(u.getStatusConta()))
+            throw new RegraNegocioException(CodigoErro.NAO_AUTENTICADO, "Token ausente, inválido ou expirado.");
+        return u;
+    }
+
     public PerfilUsuario perfil(long id) throws SQLException {
         return leitura(c -> {
-            Usuario u = ativo(c, id);
+            Usuario u = ativoOuNaoAutenticado(c, id);
             return new PerfilUsuario(u, nivel(c, u, false).getNome());
         });
     }
@@ -81,7 +90,7 @@ public class UsuarioBO extends BaseBO {
         if (!e.matches(PADRAO_EMAIL)) throw new RegraNegocioException(CodigoErro.VALIDACAO, "E-mail inválido.");
         String hash = novaSenha == null ? null : Senhas.criar(novaSenha);
         return transacao(c -> {
-            Usuario u = ativo(c, id);
+            Usuario u = ativoOuNaoAutenticado(c, id);
             u.setNome(n);
             u.setEmail(e);
             if (hash != null) u.setSenhaHash(hash);
@@ -93,7 +102,7 @@ public class UsuarioBO extends BaseBO {
     /** Desativação lógica da conta: STATUS_CONTA passa a INATIVO. */
     public void desativar(long id) throws SQLException {
         transacao(c -> {
-            Usuario u = ativo(c, id);
+            Usuario u = ativoOuNaoAutenticado(c, id);
             u.setStatusConta("INATIVO");
             new UsuarioDAO(c).atualizar(u);
             return null;
