@@ -19,6 +19,10 @@ import br.com.heaven.persistence.Jdbc;
 import br.com.heaven.service.CodigoErro;
 import br.com.heaven.service.RegraNegocioException;
 import br.com.heaven.service.Regras;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -47,8 +51,23 @@ public class ValidacaoBO extends BaseBO {
     private final Map<Long, Oferta> ofertas = new HashMap<>();
     private final SecureRandom random = new SecureRandom();
 
+    private static final Logger LOG = LoggerFactory.getLogger(ValidacaoBO.class);
+
+    /**
+     * Modo de teste: cada sorteio troca a oferta anterior do usuário. Desligado por padrão e só ligado
+     * com HEAVEN_SORTEIO_RESORTEAR=true; não deve ficar ligado em produção (permite garimpar ações).
+     */
+    private final boolean resortear;
+
     public ValidacaoBO(DataSource dataSource) {
+        this(dataSource, "false");
+    }
+
+    @Autowired
+    public ValidacaoBO(DataSource dataSource, @Value("${HEAVEN_SORTEIO_RESORTEAR:false}") String resortear) {
         super(dataSource);
+        this.resortear = resortear != null && resortear.strip().equalsIgnoreCase("true");
+        LOG.info("Modo de re-sorteio: {}", this.resortear ? "ativo" : "inativo");
     }
 
     /** Sorteia uma ação elegível de outro autor. Vazio quando não há nenhuma. */
@@ -64,7 +83,7 @@ public class ValidacaoBO extends BaseBO {
                 return Optional.<Sorteio>empty();
             }
             Oferta anterior = ofertas.get(validador);
-            long id = anterior != null && anterior.expira().isAfter(Instant.now()) && ids.contains(anterior.acao())
+            long id = !resortear && anterior != null && anterior.expira().isAfter(Instant.now()) && ids.contains(anterior.acao())
                     ? anterior.acao() : ids.get(random.nextInt(ids.size()));
             Oferta nova = new Oferta(id, Instant.now().plusSeconds(VALIDADE_OFERTA_SEGUNDOS));
             ofertas.put(validador, nova);
@@ -78,6 +97,9 @@ public class ValidacaoBO extends BaseBO {
         if (!Set.of("APROVAR", "REJEITAR").contains(voto))
             throw new RegraNegocioException(CodigoErro.VALIDACAO, "Voto inválido.");
         String j = Regras.textoOpcional(justificativa, "Justificativa", 500);
+        // Autovalidação (403) vem antes da oferta (409). Ação inexistente cai na checagem da oferta.
+        if (leitura(c -> new AcaoUsuarioDAO(c).buscar(acao)).filter(a -> a.getIdUsuario() == validador).isPresent())
+            throw new RegraNegocioException(CodigoErro.PROIBIDO, "Autovalidação proibida.");
         Oferta oferta = ofertas.get(validador);
         if (oferta == null || oferta.acao() != acao || oferta.expira().isBefore(Instant.now()))
             throw new RegraNegocioException(CodigoErro.OFERTA_EXPIRADA, "Solicite uma ação aleatória antes de votar; a oferta vale 10 minutos.");

@@ -62,3 +62,7 @@ Se a carga encontrar parâmetros preexistentes, confira que MIN_VALIDACOES_POR_A
 ## Entrega
 
 O ZIP contém a pasta completa `Heaven` e `Documentacao-Heaven.pdf`. A documentação contém capa preenchida, sumário paginado, escopo, funcionalidades, protótipos explicados, MER com todos os atributos, UML das 12 entidades e da infraestrutura, execução e validação. Os fontes de diagramas estão em `docs/mer.mmd` e `docs/classes.puml`, para edição futura. A correspondência segue o SQL e o código entregues; conceitos particulares ensinados em aula precisam ser conferidos pela equipe, pois esse material não foi fornecido.
+
+## Modo de teste do sorteio (API)
+
+`HEAVEN_SORTEIO_RESORTEAR` (padrão `false`; só vale `true` quando definida explicitamente) faz cada `POST /api/validacoes/sorteio` trocar a oferta anterior do usuário. É um **modo de teste**, usado pelo `docs/smoke-jornada.ps1`, e **NÃO deve ficar ligado em produção**: com ele, um validador pode chamar o sorteio várias vezes até cair na ação de um cúmplice. Na inicialização o log registra apenas `ativo` ou `inativo`.
