@@ -292,6 +292,15 @@ finally {
     foreach ($u in $usuarios) {
         if (-not $u.Token) { continue }
         try {
+            if ($u.Nome -eq 'A') {
+                # Cancela as acoes PENDENTES de A antes de desativar a conta (tambem quando a jornada abortou no meio).
+                $m = Invoke-Api GET '/acoes/minhas' -Token $u.Token
+                Check 'A: lista as proprias acoes antes da limpeza' $m 200
+                foreach ($p in @($m.Json | Where-Object { $_.status -eq 'PENDENTE' })) {
+                    $c = Invoke-Api DELETE "/acoes/$($p.id)" -Token $u.Token
+                    Check "A: cancela a acao pendente $($p.id)" $c 204
+                }
+            }
             $d = Invoke-Api DELETE '/usuarios/me' -Token $u.Token
             Check "desativa $($u.Nome)" $d 204
             $m = Invoke-Api GET '/usuarios/me' -Token $u.Token
