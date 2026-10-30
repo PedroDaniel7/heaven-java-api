@@ -21,10 +21,10 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.sql.SQLException;
+import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLRecoverableException;
 import java.sql.SQLTimeoutException;
 import java.sql.SQLTransientConnectionException;
-import java.sql.SQLNonTransientConnectionException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +40,7 @@ public class ApiExceptionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiExceptionHandler.class);
     private static final int ORA_VIOLACAO_UNICA = 1;
+    private static final int ORA_REGISTRO_FILHO = 2292;
     private static final Pattern RESTRICAO = Pattern.compile("\\(([^)]*)\\)");
 
     /** Restrições únicas conhecidas: mensagem amigável e campo. Qualquer outra recebe texto genérico. */
@@ -81,6 +82,8 @@ public class ApiExceptionHandler {
     public ResponseEntity<ErroResposta> banco(Exception e) {
         SQLException sql = primeiraSqlException(e);
         if (sql != null && sql.getErrorCode() == ORA_VIOLACAO_UNICA) return conflitoUnico(sql);
+        if (sql != null && sql.getErrorCode() == ORA_REGISTRO_FILHO)
+            return resposta(CodigoErro.CONFLITO, "Registro em uso por outros dados.", List.of());
         if (indisponivel(e)) {
             LOG.warn("Banco indisponível: {}", e.getClass().getSimpleName());
             return resposta(CodigoErro.BANCO_INDISPONIVEL, "Não foi possível conectar ao banco de dados.", List.of());
