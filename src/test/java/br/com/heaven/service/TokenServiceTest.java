@@ -56,8 +56,8 @@ class TokenServiceTest {
     @Test
     void cargaAdulteradaVira401() {
         TokenService s = com(SEGREDO, AGORA);
-        String assinatura = s.emitir(7).token().split("\.")[1];
-        String outraCarga = s.emitir(8).token().split("\.")[0];
+        String assinatura = s.emitir(7).token().split("[.]")[1];
+        String outraCarga = s.emitir(8).token().split("[.]")[0];
         assertNaoAutenticado(outraCarga + "." + assinatura);
     }
 

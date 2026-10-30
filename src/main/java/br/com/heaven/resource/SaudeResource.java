@@ -1,9 +1,10 @@
 package br.com.heaven.resource;
 
+import br.com.heaven.config.Publico;
+import br.com.heaven.service.CodigoErro;
+import br.com.heaven.service.RegraNegocioException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,30 +26,30 @@ public class SaudeResource {
         this.jdbc = jdbc;
     }
 
+    @Publico
     @GetMapping
     public Map<String, Object> saude() {
+        return corpoOk();
+    }
+
+    @Publico
+    @GetMapping("/banco")
+    public Map<String, Object> banco() {
+        try {
+            jdbc.queryForObject("SELECT 1 FROM DUAL", Integer.class);
+        } catch (Exception e) {
+            // Apenas a classe da excecao vai ao log; a mensagem pode conter host/usuario.
+            LOG.warn("Falha ao consultar o banco: {}", e.getClass().getSimpleName());
+            // O corpo 503 sai pelo ApiExceptionHandler, igual ao de qualquer outro erro.
+            throw new RegraNegocioException(CodigoErro.BANCO_INDISPONIVEL, "Não foi possível conectar ao banco de dados.");
+        }
+        return corpoOk();
+    }
+
+    private static Map<String, Object> corpoOk() {
         Map<String, Object> corpo = new LinkedHashMap<>();
         corpo.put("status", "OK");
         corpo.put("dataHora", OffsetDateTime.now().toString());
         return corpo;
-    }
-
-    @GetMapping("/banco")
-    public ResponseEntity<Map<String, Object>> banco() {
-        Map<String, Object> corpo = new LinkedHashMap<>();
-        try {
-            jdbc.queryForObject("SELECT 1 FROM DUAL", Integer.class);
-            corpo.put("status", "OK");
-            corpo.put("dataHora", OffsetDateTime.now().toString());
-            return ResponseEntity.ok(corpo);
-        } catch (Exception e) {
-            // Apenas a classe da excecao vai ao log; a mensagem pode conter host/usuario.
-            LOG.warn("Falha ao consultar o banco: {}", e.getClass().getSimpleName());
-            corpo.put("status", "ERRO");
-            corpo.put("codigo", "BANCO_INDISPONIVEL");
-            corpo.put("mensagem", "Nao foi possivel conectar ao banco de dados.");
-            corpo.put("dataHora", OffsetDateTime.now().toString());
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(corpo);
-        }
     }
 }
