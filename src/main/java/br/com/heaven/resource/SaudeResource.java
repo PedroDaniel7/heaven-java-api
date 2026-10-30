@@ -3,6 +3,8 @@ package br.com.heaven.resource;
 import br.com.heaven.config.Publico;
 import br.com.heaven.service.CodigoErro;
 import br.com.heaven.service.RegraNegocioException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,6 +19,7 @@ import java.util.Map;
 /** Verificacao de saude da API e do banco. Nunca expõe SQL, host nem stack trace. */
 @RestController
 @RequestMapping("/api/saude")
+@Tag(name = "Saúde")
 public class SaudeResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(SaudeResource.class);
@@ -28,12 +31,17 @@ public class SaudeResource {
 
     @Publico
     @GetMapping
+    @Operation(summary = "Saúde da API",
+            description = "Não usa o banco; serve para acordar o servidor.")
     public Map<String, Object> saude() {
         return corpoOk();
     }
 
     @Publico
     @GetMapping("/banco")
+    @Operation(summary = "Saúde do banco",
+            description = "Executa SELECT 1 FROM DUAL.")
+    @RespostasDeErro({503})
     public Map<String, Object> banco() {
         try {
             jdbc.queryForObject("SELECT 1 FROM DUAL", Integer.class);

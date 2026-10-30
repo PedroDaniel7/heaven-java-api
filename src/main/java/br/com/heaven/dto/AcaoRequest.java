@@ -1,5 +1,6 @@
 package br.com.heaven.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,8 +11,8 @@ import java.math.BigDecimal;
 
 /** Corpo de POST /api/acoes. O usuário vem só do token. */
 public record AcaoRequest(
-        @NotNull(message = "obrigatório") Long idTipoAcao,
+        @Schema(example = "1") @NotNull(message = "obrigatório") Long idTipoAcao,
         @NotNull(message = "obrigatória") @Positive(message = "deve ser maior que zero")
-        @Digits(integer = 8, fraction = 2, message = "até 8 inteiros e 2 casas decimais") BigDecimal quantidade,
-        @NotBlank(message = "obrigatória") @Size(max = 500, message = "até 500 caracteres") String evidencia) {
+        @Schema(example = "2.5") @Digits(integer = 8, fraction = 2, message = "até 8 inteiros e 2 casas decimais") BigDecimal quantidade,
+        @Schema(example = "Fui de metrô ao trabalho") @NotBlank(message = "obrigatória") @Size(max = 500, message = "até 500 caracteres") String evidencia) {
 }

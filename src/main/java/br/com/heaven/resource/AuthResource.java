@@ -7,6 +7,8 @@ import br.com.heaven.dto.LoginRequest;
 import br.com.heaven.dto.LoginResposta;
 import br.com.heaven.dto.UsuarioDto;
 import br.com.heaven.service.TokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import java.sql.SQLException;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticação")
 public class AuthResource {
 
     private final UsuarioBO usuarios;
@@ -29,6 +32,9 @@ public class AuthResource {
 
     @Publico
     @PostMapping("/login")
+    @Operation(summary = "Login",
+            description = "Devolve o token (12 h). Credencial inválida tem mensagem única; senha correta em conta inativa devolve 403.")
+    @RespostasDeErro({400, 401, 403})
     public LoginResposta login(@Valid @RequestBody LoginRequest corpo) throws SQLException {
         PerfilUsuario perfil = usuarios.autenticar(corpo.email(), corpo.senha().toCharArray());
         TokenService.TokenEmitido emitido = tokens.emitir(perfil.usuario().getId());

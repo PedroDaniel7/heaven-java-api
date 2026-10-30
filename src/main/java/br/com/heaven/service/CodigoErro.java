@@ -21,4 +21,10 @@ public enum CodigoErro {
     public int getStatus() {
         return status;
     }
+
+    /** Primeiro código com o status HTTP dado (409 devolve CONFLITO). */
+    public static CodigoErro porStatus(int status) {
+        for (CodigoErro c : values()) if (c.status == status) return c;
+        throw new IllegalArgumentException("Status sem código de erro: " + status);
+    }
 }
