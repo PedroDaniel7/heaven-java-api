@@ -137,6 +137,23 @@ $tokenU = $null; $acaoU = $null
 
 Write-Host "Smoke admin em $Raiz  (tipo de teste: $nomeTeste)"
 
+# Espera GET /api/saude responder 200 antes de testar (acorda o servidor no Render). Nao usa o banco; no maximo 2 minutos.
+function Wait-Api {
+    $limite = (Get-Date).AddSeconds(120)
+    $i = 0
+    while ($true) {
+        $i++
+        try {
+            $r = Invoke-WebRequest ($Raiz + '/api/saude') -UseBasicParsing -TimeoutSec 20
+            if ([int]$r.StatusCode -eq 200) { Write-Host "API pronta (tentativa $i)."; return }
+        } catch { $null = $_ }
+        if ((Get-Date) -gt $limite) { throw 'A API nao respondeu 200 em /api/saude em 120 s.' }
+        if ($i -eq 1) { Write-Host 'Aguardando a API responder (pode estar acordando)...' }
+        Start-Sleep -Seconds 5
+    }
+}
+Wait-Api
+
 try {
     Write-Host "`n== Chave =="
     $r = Invoke-Api GET '/admin/tipos-acao'
