@@ -1,0 +1,388 @@
+classDiagram
+  direction LR
+
+  %% ===== resource: camada HTTP =====
+  class UsuarioResource {
+    <<resource>>
+    +cadastrar(CadastroRequest) ResponseEntity~UsuarioDto~
+    +perfil(long) UsuarioDto
+    +atualizar(long, AtualizarPerfilRequest) UsuarioDto
+    +desativar(long) ResponseEntity~Void~
+  }
+  class AuthResource {
+    <<resource>>
+    +login(LoginRequest) LoginResposta
+  }
+  class TipoAcaoResource {
+    <<resource>>
+    +listar() List~TipoAcaoDto~
+    +buscar(long) TipoAcaoDto
+  }
+  class AcaoResource {
+    <<resource>>
+    +registrar(long, AcaoRequest) ResponseEntity~AcaoDto~
+    +minhas(long) List~AcaoDto~
+    +buscar(long, long) AcaoDto
+    +cancelar(long, long) ResponseEntity~Void~
+  }
+  class ValidacaoResource {
+    <<resource>>
+    +sortear(long) ResponseEntity~SorteioResposta~
+    +votar(long, VotoRequest) ResponseEntity~ResultadoVoto~
+  }
+  class RankingResource {
+    <<resource>>
+    +ranking(int) List~ItemRanking~
+  }
+  class AdminTipoAcaoResource {
+    <<resource>>
+    +listar() List~TipoAcaoAdminDto~
+    +criar(TipoAcaoAdminRequest) ResponseEntity~TipoAcaoAdminDto~
+    +atualizar(long, TipoAcaoAdminRequest) TipoAcaoAdminDto
+    +excluir(long) ResponseEntity~Void~
+  }
+  class SaudeResource {
+    <<resource>>
+    +saude() Map
+    +banco() Map
+  }
+  class ApiExceptionHandler {
+    <<RestControllerAdvice>>
+    +regra(RegraNegocioException) ResponseEntity~ErroResposta~
+    +validacao(MethodArgumentNotValidException) ResponseEntity~ErroResposta~
+    +requisicaoInvalida(Exception) ResponseEntity~ErroResposta~
+    +naoEncontrado(Exception) ResponseEntity~ErroResposta~
+    +banco(Exception) ResponseEntity~ErroResposta~
+    +inesperado(Exception) ResponseEntity~ErroResposta~
+  }
+  class ErroResposta {
+    <<record>>
+    +int status
+    +String codigo
+    +String mensagem
+    +List~Campo~ campos
+    +String dataHora
+  }
+  class RespostasDeErro {
+    <<annotation>>
+    +int[] value
+    +int sucesso
+  }
+
+  %% ===== dto: entrada e saída da API =====
+  class CadastroRequest {
+    <<record>>
+    +nome
+    +email
+    +senha
+  }
+  class LoginRequest {
+    <<record>>
+    +email
+    +senha
+  }
+  class AtualizarPerfilRequest {
+    <<record>>
+    +nome
+    +email
+    +novaSenha
+  }
+  class AcaoRequest {
+    <<record>>
+    +idTipoAcao
+    +quantidade
+    +evidencia
+  }
+  class VotoRequest {
+    <<record>>
+    +idAcao
+    +voto
+    +justificativa
+  }
+  class TipoAcaoAdminRequest {
+    <<record>>
+    +nome
+    +desafio
+    +categoria
+    +unidade
+    +impactoAmbientalEstimado
+    +pontosBase
+    +dificuldade
+    +ativo
+  }
+  class UsuarioDto {
+    <<record>>
+    +id +nome +email +pontos +reputacao +nivel +streak +maiorStreak +dataCadastro
+    +de(PerfilUsuario)$ UsuarioDto
+  }
+  class LoginResposta {
+    <<record>>
+    +token
+    +expiraEm
+    +usuario
+  }
+  class TipoAcaoDto {
+    <<record>>
+    +id +nome +desafio +categoria +unidade +dificuldade
+    +de(TipoAcao)$ TipoAcaoDto
+  }
+  class TipoAcaoAdminDto {
+    <<record>>
+    +id +nome +desafio +categoria +unidade +impactoAmbientalEstimado +pontosBase +dificuldade +ativo
+    +de(TipoAcao)$ TipoAcaoAdminDto
+  }
+  class AcaoDto {
+    <<record>>
+    +id +tipo +quantidade +evidencia +status +pontosPrevistos +dataHora +dataConclusao
+    +de(AcaoUsuario, TipoAcao)$ AcaoDto
+  }
+  class SorteioResposta {
+    <<record>>
+    +acao +expiraEm
+    +de(AcaoUsuario, TipoAcao, OffsetDateTime)$ SorteioResposta
+  }
+
+  %% ===== bo: casos de uso =====
+  class BaseBO {
+    <<abstract>>
+    #transacao(Operacao~T~) T
+    #leitura(Operacao~T~) T
+    #ativo(Connection, long) Usuario
+    #nivel(Connection, Usuario, boolean) NivelConfianca
+    #bloqueio(Connection, long, String)
+  }
+  class UsuarioBO {
+    <<service>>
+    +cadastrar(String, String, char[]) PerfilUsuario
+    +autenticar(String, char[]) PerfilUsuario
+    +perfil(long) PerfilUsuario
+    +atualizar(long, String, String, char[]) PerfilUsuario
+    +desativar(long)
+    +ranking(int) List~ItemRanking~
+  }
+  class AcaoBO {
+    <<service>>
+    +tiposAtivos() List~TipoAcao~
+    +tipoAtivo(long) TipoAcao
+    +tiposPorId() Map~Long, TipoAcao~
+    +registrarAcao(long, long, BigDecimal, String) AcaoUsuario
+    +minhasAcoes(long) List~AcaoUsuario~
+    +buscarMinha(long, long) AcaoUsuario
+    +cancelarAcao(long, long)
+  }
+  class ValidacaoBO {
+    <<service>>
+    -boolean resortear
+    +sortearAcao(long) Optional~Sorteio~
+    +votar(long, long, String, String) ResultadoVoto
+    +aplicarPenalizacao(long, long, BigDecimal)
+  }
+  class TipoAcaoAdminBO {
+    <<service>>
+    +listar() List~TipoAcao~
+    +criar(Dados) TipoAcao
+    +atualizar(long, Dados) TipoAcao
+    +excluir(long)
+  }
+  class PerfilUsuario {
+    <<record>>
+    +usuario
+    +nivel
+  }
+  class ItemRanking {
+    <<record>>
+    +posicao
+    +nome
+    +pontos
+    +nivel
+    +streak
+  }
+  class Sorteio {
+    <<record>>
+    +acao
+    +expiraEm
+  }
+  class ResultadoVoto {
+    <<record>>
+    +idAcao
+    +voto
+    +acaoConcluida
+  }
+
+  %% ===== service: regras e segurança =====
+  class TokenService {
+    <<component>>
+    +emitir(long) TokenEmitido
+    +validar(String) long
+  }
+  class ChaveAdmin {
+    <<component>>
+    +confere(String) boolean
+  }
+  class Regras {
+    <<utility>>
+    +calcularImpacto(BigDecimal, BigDecimal)$ BigDecimal
+    +calcularPontos(BigDecimal, long)$ long
+    +verificarLimite(long, long)$
+    +texto(String, String, int)$ String
+    +textoOpcional(String, String, int)$ String
+  }
+  class Senhas {
+    <<utility>>
+    +criar(char[])$ String
+    +conferir(char[], String)$ boolean
+  }
+  class RegraNegocioException {
+    <<exception>>
+    +getCodigo() CodigoErro
+  }
+  class CodigoErro {
+    <<enumeration>>
+    VALIDACAO
+    NAO_AUTENTICADO
+    PROIBIDO
+    NAO_ENCONTRADO
+    CONFLITO
+    REGRA
+    OFERTA_EXPIRADA
+    BANCO_INDISPONIVEL
+    ERRO_INTERNO
+    +getStatus() int
+    +porStatus(int)$ CodigoErro
+  }
+
+  %% ===== config =====
+  class AuthInterceptor {
+    <<component>>
+    +preHandle(request, response, handler) boolean
+  }
+  class WebConfig {
+    <<configuration>>
+    +addInterceptors(InterceptorRegistry)
+  }
+  class CorsFilter {
+    <<filter>>
+    +doFilterInternal(request, response, chain)
+  }
+  class DataSourceConfig {
+    <<configuration>>
+    +dataSource(Environment) DataSource
+  }
+  class OpenApiConfig {
+    <<configuration>>
+    +heavenOpenApi() OpenAPI
+    +esquemaDeErro() OpenApiCustomizer
+    +respostasDeErro() OperationCustomizer
+  }
+  class Publico {
+    <<annotation>>
+  }
+  class SomenteAdmin {
+    <<annotation>>
+  }
+
+  %% ===== fronteiras externas (não detalhadas) =====
+  class DataSource["javax.sql.DataSource"]
+  class JdbcTemplate["Spring JdbcTemplate"]
+  class DAOs["DAOs (br.com.heaven.dao) sobre JDBC"]
+  class Modelos["Modelos (br.com.heaven.model)"]
+  class HandlerInterceptor {
+    <<interface>>
+  }
+  class WebMvcConfigurer {
+    <<interface>>
+  }
+
+  %% ===== dependências: resource -> bo / service =====
+  UsuarioResource --> UsuarioBO
+  AuthResource --> UsuarioBO
+  AuthResource --> TokenService
+  TipoAcaoResource --> AcaoBO
+  AcaoResource --> AcaoBO
+  ValidacaoResource --> ValidacaoBO
+  ValidacaoResource --> AcaoBO
+  RankingResource --> UsuarioBO
+  AdminTipoAcaoResource --> TipoAcaoAdminBO
+  SaudeResource --> JdbcTemplate
+  SaudeResource ..> RegraNegocioException
+
+  %% ===== resource -> dto =====
+  UsuarioResource ..> CadastroRequest
+  UsuarioResource ..> AtualizarPerfilRequest
+  UsuarioResource ..> UsuarioDto
+  AuthResource ..> LoginRequest
+  AuthResource ..> LoginResposta
+  TipoAcaoResource ..> TipoAcaoDto
+  AcaoResource ..> AcaoRequest
+  AcaoResource ..> AcaoDto
+  ValidacaoResource ..> VotoRequest
+  ValidacaoResource ..> SorteioResposta
+  ValidacaoResource ..> ResultadoVoto
+  RankingResource ..> ItemRanking
+  AdminTipoAcaoResource ..> TipoAcaoAdminRequest
+  AdminTipoAcaoResource ..> TipoAcaoAdminDto
+  LoginResposta *-- UsuarioDto
+  AcaoDto *-- AcaoDtoTipo
+  class AcaoDtoTipo["AcaoDto.Tipo"] {
+    <<record>>
+    +id
+    +nome
+    +unidade
+  }
+
+  %% ===== dto -> bo / modelos =====
+  UsuarioDto ..> PerfilUsuario
+  AcaoDto ..> Modelos
+  TipoAcaoDto ..> Modelos
+  TipoAcaoAdminDto ..> Modelos
+  SorteioResposta ..> Modelos
+  SorteioResposta ..> Sorteio
+
+  %% ===== bo =====
+  UsuarioBO --|> BaseBO
+  AcaoBO --|> BaseBO
+  ValidacaoBO --|> BaseBO
+  TipoAcaoAdminBO --|> BaseBO
+  BaseBO --> DataSource
+  BaseBO ..> DAOs
+  UsuarioBO ..> Senhas
+  UsuarioBO ..> Regras
+  UsuarioBO ..> PerfilUsuario
+  UsuarioBO ..> ItemRanking
+  AcaoBO ..> Regras
+  ValidacaoBO ..> Regras
+  ValidacaoBO ..> Sorteio
+  ValidacaoBO ..> ResultadoVoto
+  TipoAcaoAdminBO ..> Regras
+  UsuarioBO ..> RegraNegocioException
+  AcaoBO ..> RegraNegocioException
+  ValidacaoBO ..> RegraNegocioException
+  TipoAcaoAdminBO ..> RegraNegocioException
+  RegraNegocioException --> CodigoErro
+  Regras ..> RegraNegocioException
+
+  %% ===== erros =====
+  ApiExceptionHandler ..> RegraNegocioException
+  ApiExceptionHandler ..> CodigoErro
+  ApiExceptionHandler ..> ErroResposta
+
+  %% ===== config / segurança =====
+  AuthInterceptor ..|> HandlerInterceptor
+  AuthInterceptor --> TokenService
+  AuthInterceptor --> ChaveAdmin
+  AuthInterceptor ..> Publico
+  AuthInterceptor ..> SomenteAdmin
+  AuthInterceptor ..> RegraNegocioException
+  WebConfig ..|> WebMvcConfigurer
+  WebConfig --> AuthInterceptor
+  AdminTipoAcaoResource ..> SomenteAdmin
+  UsuarioResource ..> Publico
+  AuthResource ..> Publico
+  TipoAcaoResource ..> Publico
+  RankingResource ..> Publico
+  SaudeResource ..> Publico
+  TokenService ..> RegraNegocioException
+  OpenApiConfig ..> ErroResposta
+  OpenApiConfig ..> RespostasDeErro
+  OpenApiConfig ..> CodigoErro
+  DataSourceConfig ..> DataSource
