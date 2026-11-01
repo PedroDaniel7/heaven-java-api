@@ -1,0 +1,162 @@
+classDiagram
+  direction TB
+
+  %% Arquitetura em camadas: Resource -> BO -> DAO -> Model (br.com.heaven).
+  %% Os atributos dos models estão em classes-modelo.mmd.
+
+  class Resources["Resources (br.com.heaven.resource)"] {
+    <<camada HTTP>>
+    UsuarioResource
+    AuthResource
+    TipoAcaoResource
+    AcaoResource
+    ValidacaoResource
+    RankingResource
+    AdminTipoAcaoResource
+    SaudeResource
+  }
+  class AuthInterceptor {
+    <<config>>
+    +preHandle(request, response, handler) boolean
+  }
+  class ApiExceptionHandler {
+    <<RestControllerAdvice>>
+    +regra(RegraNegocioException) ResponseEntity
+  }
+  class TokenService {
+    <<service>>
+    +emitir(long) TokenEmitido
+    +validar(String) long
+  }
+
+  class BaseBO {
+    <<abstract>>
+    #transacao(Operacao) T
+    #leitura(Operacao) T
+  }
+  class UsuarioBO {
+    <<bo>>
+    +cadastrar(...) PerfilUsuario
+    +autenticar(...) PerfilUsuario
+    +ranking(int) List
+  }
+  class AcaoBO {
+    <<bo>>
+    +registrarAcao(...) AcaoUsuario
+    +cancelarAcao(long, long)
+  }
+  class ValidacaoBO {
+    <<bo>>
+    +sortearAcao(long) Optional
+    +votar(...) ResultadoVoto
+  }
+  class TipoAcaoAdminBO {
+    <<bo>>
+    +criar(Dados) TipoAcao
+    +excluir(long)
+  }
+
+  class LeituraDAO~T~ {
+    +buscar(Object... ids) Optional~T~
+    +listar() List~T~
+  }
+  class RegistroDAO~T~ {
+    +inserir(T) T
+  }
+  class CrudDAO~T~ {
+    +atualizar(T)
+    +excluir(Object... ids) boolean
+  }
+  class UsuarioDAO {
+    <<dao>>
+  }
+  class DemaisDAOs["Demais DAOs (um por entidade)"] {
+    <<dao>>
+    TipoAcaoDAO
+    NivelConfiancaDAO
+    ConquistaDAO
+    ParametroSistemaDAO
+    IncidenteFraudeDAO
+    AcaoUsuarioDAO
+    ValidacaoDAO
+    HistoricoPontosDAO
+    HistoricoReputacaoDAO
+    PenalizacaoDAO
+    UsuarioConquistaDAO
+  }
+
+  class Models["Models (ver classes-modelo.mmd)"] {
+    <<model>>
+    Usuario
+    NivelConfianca
+    TipoAcao
+    AcaoUsuario
+    Validacao
+    HistoricoPontos
+    HistoricoReputacao
+    Conquista
+    UsuarioConquista
+    IncidenteFraude
+    Penalizacao
+    ParametroSistema
+  }
+  class DataSourceConfig {
+    <<config>>
+    +dataSource(Environment) DataSource
+  }
+
+  %% transversais (acesso, erros, segurança)
+  AuthInterceptor ..> Resources : exige token ou chave admin
+  AuthInterceptor --> TokenService
+  ApiExceptionHandler ..> Resources : padroniza os erros
+  Resources ..> TokenService : emite o token no login
+
+  %% Resource -> BO
+  Resources --> UsuarioBO
+  Resources --> AcaoBO
+  Resources --> ValidacaoBO
+  Resources --> TipoAcaoAdminBO
+
+  %% herança dos BOs
+  UsuarioBO --|> BaseBO
+  AcaoBO --|> BaseBO
+  ValidacaoBO --|> BaseBO
+  TipoAcaoAdminBO --|> BaseBO
+
+  %% BO -> DAO
+  BaseBO ..> UsuarioDAO
+  BaseBO ..> DemaisDAOs
+  UsuarioBO ..> UsuarioDAO
+  AcaoBO ..> DemaisDAOs
+  ValidacaoBO ..> UsuarioDAO
+  ValidacaoBO ..> DemaisDAOs
+  TipoAcaoAdminBO ..> DemaisDAOs
+  DataSourceConfig ..> BaseBO : fornece o DataSource
+
+  %% herança dos DAOs
+  RegistroDAO --|> LeituraDAO
+  CrudDAO --|> RegistroDAO
+  UsuarioDAO --|> CrudDAO
+  DemaisDAOs --|> CrudDAO : cadastros
+  DemaisDAOs --|> RegistroDAO : registros
+
+  %% DAO -> Model
+  UsuarioDAO ..> Models
+  DemaisDAOs ..> Models
+
+  style Resources fill:#f3e5f5,stroke:#6a1b9a
+  style BaseBO fill:#fff3e0,stroke:#ef6c00
+  style UsuarioBO fill:#fff3e0,stroke:#ef6c00
+  style AcaoBO fill:#fff3e0,stroke:#ef6c00
+  style ValidacaoBO fill:#fff3e0,stroke:#ef6c00
+  style TipoAcaoAdminBO fill:#fff3e0,stroke:#ef6c00
+  style LeituraDAO fill:#e3f2fd,stroke:#1565c0
+  style RegistroDAO fill:#e3f2fd,stroke:#1565c0
+  style CrudDAO fill:#e3f2fd,stroke:#1565c0
+  style UsuarioDAO fill:#e3f2fd,stroke:#1565c0
+  style DemaisDAOs fill:#e3f2fd,stroke:#1565c0
+  style Models fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style AuthInterceptor fill:#fce4ec,stroke:#ad1457
+  style ApiExceptionHandler fill:#fce4ec,stroke:#ad1457
+  style TokenService fill:#fffde7,stroke:#f9a825
+  style DataSourceConfig fill:#fce4ec,stroke:#ad1457

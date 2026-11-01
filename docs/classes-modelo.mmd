@@ -1,0 +1,160 @@
+classDiagram
+  direction TB
+
+  %% As 12 classes de br.com.heaven.model, uma por tabela do MER.
+  %% As chaves estrangeiras são ids (Long); as setas mostram as relações do MER.
+
+  class NivelConfianca {
+    <<entity>>
+    +Long id PK
+    +String nome
+    +BigDecimal reputacaoMinima
+    +BigDecimal pesoVoto
+    +Long limiteValidacoesDia
+    +Long limiteAcoesDia
+  }
+  class Usuario {
+    <<entity>>
+    +Long id PK
+    +String nome
+    +String email
+    +String senhaHash
+    +LocalDateTime dataCadastro
+    +String statusConta
+    +Long pontosAtuais
+    +BigDecimal reputacaoAtual
+    +Long idNivelConfianca FK
+    +Long streakAtual
+    +Long maiorStreak
+    +LocalDateTime dataUltimaAcao
+  }
+  class TipoAcao {
+    <<entity>>
+    +Long id PK
+    +String nome
+    +String descricao
+    +String categoria
+    +String unidadeMedida
+    +BigDecimal impactoAmbientalEstimado
+    +Long pontosBase
+    +String dificuldade
+    +String statusAtivo
+  }
+  class AcaoUsuario {
+    <<entity>>
+    +Long id PK
+    +Long idUsuario FK
+    +Long idTipoAcao FK
+    +LocalDateTime dataHora
+    +BigDecimal quantidade
+    +BigDecimal impactoAmbientalCalculado
+    +Long pontosPrevistos
+    +String status
+    +String descricaoEvidencia
+    +LocalDateTime dataConclusao
+  }
+  class Validacao {
+    <<entity>>
+    +Long id PK
+    +Long idAcao FK
+    +Long idValidador FK
+    +String voto
+    +BigDecimal pesoVoto
+    +BigDecimal reputacaoValidadorMomento
+    +LocalDateTime dataHora
+    +String justificativa
+  }
+  class HistoricoPontos {
+    <<entity>>
+    +Long id PK
+    +Long idUsuario FK
+    +Long quantidade
+    +String tipoMovimentacao
+    +String descricao
+    +Long idAcao FK
+    +LocalDateTime dataHora
+  }
+  class HistoricoReputacao {
+    <<entity>>
+    +Long id PK
+    +Long idUsuario FK
+    +BigDecimal reputacaoAnterior
+    +BigDecimal reputacaoNova
+    +String motivo
+    +Long idValidacao FK
+    +LocalDateTime dataHora
+  }
+  class Conquista {
+    <<entity>>
+    +Long id PK
+    +String nome
+    +String descricao
+    +String requisito
+    +Long pontosBonus
+  }
+  class UsuarioConquista {
+    <<entity>>
+    +Long idUsuario PK, FK
+    +Long idConquista PK, FK
+    +LocalDateTime dataConquista
+  }
+  class IncidenteFraude {
+    <<entity>>
+    +Long id PK
+    +Long idUsuario FK
+    +String tipoIncidente
+    +String descricao
+    +String nivelSeveridade
+    +LocalDateTime dataHora
+    +String status
+  }
+  class Penalizacao {
+    <<entity>>
+    +Long id PK
+    +Long idUsuario FK
+    +Long idIncidente FK
+    +String tipoPenalizacao
+    +String descricao
+    +Long pontosPerdidos
+    +BigDecimal reputacaoReduzida
+    +LocalDateTime dataInicio
+    +LocalDateTime dataFim
+    +String status
+  }
+  class ParametroSistema {
+    <<entity>>
+    +Long id PK
+    +String nomeParametro
+    +BigDecimal valor
+    +String descricao
+  }
+  note for Usuario "Todos os models têm construtor vazio, construtor completo, getters e setters de cada atributo"
+  note for ParametroSistema "Sem relações: guarda os parâmetros do sistema"
+
+  NivelConfianca "1" --> "0..*" Usuario : classifica
+  Usuario "1" --> "0..*" AcaoUsuario : registra
+  TipoAcao "1" --> "0..*" AcaoUsuario : tipifica
+  AcaoUsuario "1" --> "0..*" Validacao : recebe
+  Usuario "1" --> "0..*" Validacao : vota como validador
+  Usuario "1" --> "0..*" HistoricoPontos : acumula
+  AcaoUsuario "0..1" --> "0..*" HistoricoPontos : origina
+  Usuario "1" --> "0..*" HistoricoReputacao : tem
+  Validacao "0..1" --> "0..*" HistoricoReputacao : motiva
+  Usuario "1" --> "0..*" UsuarioConquista : conquista
+  Conquista "1" --> "0..*" UsuarioConquista : concedida em
+  Usuario "1" --> "0..*" IncidenteFraude : envolve
+  Usuario "1" --> "0..*" Penalizacao : sofre
+  IncidenteFraude "0..1" --> "0..*" Penalizacao : decorre de
+
+  style NivelConfianca fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style Usuario fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style TipoAcao fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style AcaoUsuario fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style Validacao fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style HistoricoPontos fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style HistoricoReputacao fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style Conquista fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style UsuarioConquista fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style IncidenteFraude fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style Penalizacao fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+  style ParametroSistema fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
