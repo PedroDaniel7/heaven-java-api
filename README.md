@@ -8,12 +8,14 @@ Projeto da disciplina de Java (FIAP, turma 1TDSPW), 2º semestre, Challenge.
 
 | O quê | Endereço |
 | --- | --- |
+| Repositório (GitHub) | https://github.com/PedroDaniel7/heaven-java-api |
 | API em produção | https://heaven-java-api.onrender.com |
 | Swagger (produção) | https://heaven-java-api.onrender.com/swagger-ui/index.html |
 | Front-end | https://heaven-frontend-2semestre.vercel.app |
 | Contrato da API | [docs/contrato-api.md](docs/contrato-api.md) |
 | Modelo entidade-relacionamento | [docs/mer.mmd](docs/mer.mmd) |
-| Diagrama de classes | [docs/classes.mmd](docs/classes.mmd) |
+| Diagrama de classes (models) | [docs/classes-modelo.mmd](docs/classes-modelo.mmd) |
+| Diagrama de classes (camadas) | [docs/classes-camadas.mmd](docs/classes-camadas.mmd) |
 
 > **Cold start no Render:** a hospedagem gratuita põe a API para dormir quando fica sem uso. A primeira requisição depois disso pode levar cerca de um minuto. Chame `GET /api/saude` para acordar o servidor antes de usar o front ou o Swagger.
 
@@ -23,6 +25,17 @@ Projeto da disciplina de Java (FIAP, turma 1TDSPW), 2º semestre, Challenge.
 - Oracle Database (schema da FIAP), acesso por JDBC puro com pool HikariCP
 - Token próprio HMAC-SHA256, sem Spring Security
 - springdoc-openapi (Swagger UI) e Docker
+
+## Ferramentas e versões
+
+| Ferramenta | Versão |
+| --- | --- |
+| JDK | 17 (o código é compilado com `--release 17`; roda em 17 ou superior) |
+| Maven | Maven Wrapper (`./mvnw`), Maven 3.9.16; não precisa instalar o Maven |
+| Spring Boot | 3.5.16 (Web, Validation, JDBC) |
+| Banco de dados | Oracle Database (schema da FIAP) por JDBC, driver `ojdbc11` 23.6.0.24.10 |
+| Documentação da API | springdoc-openapi 2.8.13 (Swagger UI) |
+| IDE | IntelliJ IDEA |
 
 ## Como rodar
 
