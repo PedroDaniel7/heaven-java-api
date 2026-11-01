@@ -4,3 +4,6 @@ target/
 *.log
 .env
 *.zip
+.env.*
+.vscode/
+HELP.md
