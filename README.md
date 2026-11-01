@@ -16,6 +16,8 @@ Projeto da disciplina de Java (FIAP, turma 1TDSPW), 2º semestre, Challenge.
 | Modelo entidade-relacionamento | [docs/mer.mmd](docs/mer.mmd) |
 | Diagrama de classes (models) | [docs/classes-modelo.mmd](docs/classes-modelo.mmd) |
 | Diagrama de classes (camadas) | [docs/classes-camadas.mmd](docs/classes-camadas.mmd) |
+| Documentação (PDF) | [docs/Heaven_Documentacao_Java_Sprint4.pdf](docs/Heaven_Documentacao_Java_Sprint4.pdf) |
+| Código-fonte (ZIP) | [heaven-java-api.zip](heaven-java-api.zip) |
 
 > **Cold start no Render:** a hospedagem gratuita põe a API para dormir quando fica sem uso. A primeira requisição depois disso pode levar cerca de um minuto. Chame `GET /api/saude` para acordar o servidor antes de usar o front ou o Swagger.
 
